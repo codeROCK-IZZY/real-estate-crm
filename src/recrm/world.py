@@ -20,13 +20,35 @@ from dataclasses import dataclass, field
 import numpy as np
 
 SOURCES = ("portal", "website", "open_house", "social", "referral", "past_client")
-COOL_HOURS = {"portal": 20.0, "website": 40.0, "open_house": 60.0, "social": 16.0, "referral": 200.0, "past_client": 300.0}
-HOT = ["We're pre-approved and ready to move.", "Can we see it this weekend?", "We need to move by next month.",
-       "Our lease ends soon, looking to buy quickly.", "Mortgage approval came through yesterday."]
-WARM = ["Is this still available?", "What are the property taxes?", "Does it have a garage?",
-        "Could you send more photos?", "How old is the roof?"]
-COLD = ["Just browsing for now.", "What's the price?", "Thinking about buying next year.",
-        "Curious what homes go for around here.", "Not sure we're ready yet."]
+COOL_HOURS = {
+    "portal": 20.0,
+    "website": 40.0,
+    "open_house": 60.0,
+    "social": 16.0,
+    "referral": 200.0,
+    "past_client": 300.0,
+}
+HOT = [
+    "We're pre-approved and ready to move.",
+    "Can we see it this weekend?",
+    "We need to move by next month.",
+    "Our lease ends soon, looking to buy quickly.",
+    "Mortgage approval came through yesterday.",
+]
+WARM = [
+    "Is this still available?",
+    "What are the property taxes?",
+    "Does it have a garage?",
+    "Could you send more photos?",
+    "How old is the roof?",
+]
+COLD = [
+    "Just browsing for now.",
+    "What's the price?",
+    "Thinking about buying next year.",
+    "Curious what homes go for around here.",
+    "Not sure we're ready yet.",
+]
 
 
 @dataclass
@@ -105,11 +127,24 @@ def features(lead: Lead) -> np.ndarray:
     return np.array(
         [1.0]
         + [1.0 if lead.source == s else 0.0 for s in SOURCES[1:]]
-        + [1.0 if m in HOT else 0.0, 1.0 if m in COLD else 0.0,
-           float(np.log1p(lead.views)), float(np.log1p(lead.saves)), float(np.log(lead.budget_ratio)),
-           1.0 if lead.phone else 0.0]
+        + [
+            1.0 if m in HOT else 0.0,
+            1.0 if m in COLD else 0.0,
+            float(np.log1p(lead.views)),
+            float(np.log1p(lead.saves)),
+            float(np.log(lead.budget_ratio)),
+            1.0 if lead.phone else 0.0,
+        ]
     )
 
 
-FEATURE_NAMES = ["bias", *[f"source:{s}" for s in SOURCES[1:]], "hot words", "cold words", "log views", "log saves",
-                 "log budget ratio", "phone"]
+FEATURE_NAMES = [
+    "bias",
+    *[f"source:{s}" for s in SOURCES[1:]],
+    "hot words",
+    "cold words",
+    "log views",
+    "log saves",
+    "log budget ratio",
+    "phone",
+]

@@ -1,0 +1,193 @@
+{
+  "banks": {
+    "tuning": {
+      "brokerages": 6,
+      "agents": 39,
+      "leads": 32840,
+      "fifo": {
+        "label": "Oldest first (inbox order)",
+        "deals": 152,
+        "viewings": 391,
+        "serious_leads": 6234,
+        "serious_never_called": 4418,
+        "serious_median_wait_h": 334.5,
+        "calls": 27772
+      },
+      "newest": {
+        "label": "Newest first (speed to lead)",
+        "deals": 2190,
+        "viewings": 5133,
+        "serious_leads": 6234,
+        "serious_never_called": 2805,
+        "serious_median_wait_h": 1.6,
+        "calls": 27771
+      },
+      "rules": {
+        "label": "Referrals, then urgent words, then newest",
+        "deals": 2486,
+        "viewings": 5642,
+        "serious_leads": 6234,
+        "serious_never_called": 1788,
+        "serious_median_wait_h": 2.7,
+        "calls": 27776
+      },
+      "score": {
+        "label": "Predicted seriousness x reachability (this CRM)",
+        "deals": 2863,
+        "viewings": 6454,
+        "serious_leads": 6234,
+        "serious_never_called": 756,
+        "serious_median_wait_h": 3.2,
+        "calls": 27767
+      }
+    },
+    "heldout": {
+      "brokerages": 15,
+      "agents": 72,
+      "leads": 60170,
+      "fifo": {
+        "label": "Oldest first (inbox order)",
+        "deals": 370,
+        "viewings": 741,
+        "serious_leads": 11236,
+        "serious_never_called": 7966,
+        "serious_median_wait_h": 334.5,
+        "calls": 51267
+      },
+      "newest": {
+        "label": "Newest first (speed to lead)",
+        "deals": 4056,
+        "viewings": 9354,
+        "serious_leads": 11236,
+        "serious_never_called": 4985,
+        "serious_median_wait_h": 1.6,
+        "calls": 51274
+      },
+      "rules": {
+        "label": "Referrals, then urgent words, then newest",
+        "deals": 4537,
+        "viewings": 10375,
+        "serious_leads": 11236,
+        "serious_never_called": 3164,
+        "serious_median_wait_h": 2.5,
+        "calls": 51269
+      },
+      "score": {
+        "label": "Predicted seriousness x reachability (this CRM)",
+        "deals": 5200,
+        "viewings": 11790,
+        "serious_leads": 11236,
+        "serious_never_called": 1330,
+        "serious_median_wait_h": 3.1,
+        "calls": 51267
+      }
+    },
+    "shifted": {
+      "brokerages": 8,
+      "agents": 42,
+      "leads": 35485,
+      "fifo": {
+        "label": "Oldest first (inbox order)",
+        "deals": 163,
+        "viewings": 362,
+        "serious_leads": 8986,
+        "serious_never_called": 6391,
+        "serious_median_wait_h": 334.5,
+        "calls": 29874
+      },
+      "newest": {
+        "label": "Newest first (speed to lead)",
+        "deals": 2772,
+        "viewings": 6294,
+        "serious_leads": 8986,
+        "serious_never_called": 4041,
+        "serious_median_wait_h": 1.8,
+        "calls": 29885
+      },
+      "rules": {
+        "label": "Referrals, then urgent words, then newest",
+        "deals": 2807,
+        "viewings": 6360,
+        "serious_leads": 8986,
+        "serious_never_called": 3728,
+        "serious_median_wait_h": 2.2,
+        "calls": 29885
+      },
+      "score": {
+        "label": "Predicted seriousness x reachability (this CRM)",
+        "deals": 3239,
+        "viewings": 7357,
+        "serious_leads": 8986,
+        "serious_never_called": 2045,
+        "serious_median_wait_h": 3.0,
+        "calls": 29878
+      },
+      "score_retrained": {
+        "label": "The same, retrained on the brokerage's own history",
+        "deals": 3274,
+        "viewings": 7545,
+        "serious_leads": 8986,
+        "serious_never_called": 1536,
+        "serious_median_wait_h": 3.0,
+        "calls": 29881
+      }
+    }
+  },
+  "model": {
+    "features": [
+      "bias",
+      "source:website",
+      "source:open_house",
+      "source:social",
+      "source:referral",
+      "source:past_client",
+      "hot words",
+      "cold words",
+      "log views",
+      "log saves",
+      "log budget ratio",
+      "phone"
+    ],
+    "weights": [
+      -1.88687,
+      0.53012,
+      0.14715,
+      -0.35616,
+      1.41689,
+      1.17741,
+      0.38071,
+      -0.45458,
+      0.58577,
+      0.31799,
+      0.17577,
+      0.19227
+    ]
+  },
+  "cooling": {
+    "portal": 19.6,
+    "website": 37.8,
+    "open_house": 60.4,
+    "social": 16.3,
+    "referral": 203.7,
+    "past_client": 325.3
+  },
+  "checks": {
+    "heldout_deals_vs_newest_min": 1.282,
+    "heldout_deals_vs_rules_min": 1.146,
+    "shifted_deals_vs_newest_min": 1.168,
+    "shifted_retrained_vs_newest_min": 1.181
+  },
+  "gate": {
+    "heldout_deals_vs_newest_min": 1.1,
+    "heldout_deals_vs_rules_min": 1.0,
+    "shifted_deals_vs_newest_min": 0.95,
+    "shifted_retrained_vs_newest_min": 1.0
+  },
+  "passed": {
+    "heldout_deals_vs_newest_min": true,
+    "heldout_deals_vs_rules_min": true,
+    "shifted_deals_vs_newest_min": true,
+    "shifted_retrained_vs_newest_min": true
+  },
+  "ok": true
+}

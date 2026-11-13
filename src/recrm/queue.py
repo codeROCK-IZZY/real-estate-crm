@@ -44,7 +44,7 @@ class Learned:
 
     def priority(self, lead: Lead, now: float) -> float:
         tau = self.cooling.get(lead.source, 48.0)
-        return self.serious(lead) * float(np.exp(-(now - lead.arrive) / tau)) * tau ** -self.alpha
+        return self.serious(lead) * float(np.exp(-(now - lead.arrive) / tau)) * float(tau**-self.alpha)
 
 
 def reach_probability(lead: Lead, age: float) -> float:
@@ -58,15 +58,29 @@ def _priority(policy: str, lead: Lead, now: float, learned: Learned | None) -> t
     if policy == "newest":
         return (lead.arrive,)
     if policy == "rules":
-        tier = 2 if lead.source in ("referral", "past_client") else 1 if "pre-approved" in lead.message or "move" in lead.message else 0
+        tier = (
+            2
+            if lead.source in ("referral", "past_client")
+            else 1
+            if "pre-approved" in lead.message or "move" in lead.message
+            else 0
+        )
         return (tier, lead.arrive)
     assert learned is not None
     return (learned.priority(lead, now),)
 
 
-def simulate(brokerage: Brokerage, policy: str, learned: Learned | None = None, seed: int = 0,
-             log: list[tuple[str, float, bool, Lead]] | None = None) -> dict[str, Any]:
-    """Run the two months; returns outcomes. With `log`, records every call (source, age, answered, lead)."""
+def simulate(
+    brokerage: Brokerage,
+    policy: str,
+    learned: Learned | None = None,
+    seed: int = 0,
+    log: list[tuple[str, float, bool, Lead]] | None = None,
+    hours: int | None = None,
+    out: list[Lead] | None = None,
+) -> dict[str, Any]:
+    """Run the two months (or the first `hours`); returns outcomes. With `log`, records every call (source, age,
+    answered, lead); with `out`, hands back the leads in their final state."""
     g = np.random.default_rng(seed)
     leads = copy.deepcopy(brokerage.leads)
     if learned is not None:
@@ -74,7 +88,7 @@ def simulate(brokerage: Brokerage, policy: str, learned: Learned | None = None, 
     arrived = 0
     open_leads: list[Lead] = []
     calls = 0
-    for hour in range(brokerage.days * 24):
+    for hour in range(brokerage.days * 24 if hours is None else hours):
         while arrived < len(leads) and leads[arrived].arrive < hour + 1:
             open_leads.append(leads[arrived])
             arrived += 1
@@ -87,11 +101,7 @@ def simulate(brokerage: Brokerage, policy: str, learned: Learned | None = None, 
             if not ready:
                 continue
             ready.sort(key=lambda x: _priority(policy, x, now, learned), reverse=True)
-            busy = 0
-            for lead in ready[: brokerage.agents]:
-                if busy >= brokerage.agents:
-                    break
-                busy += 1
+            for lead in ready[: brokerage.agents]:  # each agent makes one call in this slot
                 calls += 1
                 age = now - lead.arrive
                 if lead.first_contact is None:
@@ -106,6 +116,8 @@ def simulate(brokerage: Brokerage, policy: str, learned: Learned | None = None, 
                     lead.closed = lead.viewing and bool(g.random() < CLOSE_RATE)
                 elif lead.attempts >= MAX_ATTEMPTS:
                     lead.lost = True
+    if out is not None:
+        out.extend(leads)
     serious = [x for x in leads if x.intent >= 0.5]
     waits = [x.first_contact - x.arrive for x in serious if x.first_contact is not None]
     return {
@@ -123,9 +135,10 @@ def simulate(brokerage: Brokerage, policy: str, learned: Learned | None = None, 
 
 
 def simulate_history(brokerage: Brokerage, seed: int = 0) -> list[tuple[np.ndarray, float]]:
-    """Training rows from a past period worked oldest-first: leads reached within two days, labelled by viewing."""
+    """Training rows from a past period worked newest-first (the usual habit): leads reached within two days,
+    labelled by whether they booked a viewing."""
     log: list[tuple[str, float, bool, Lead]] = []
-    simulate(brokerage, "fifo", seed=seed, log=log)
+    simulate(brokerage, "newest", seed=seed, log=log)
     rows = []
     for _src, age, answered, lead in log:
         if answered and age <= 48:

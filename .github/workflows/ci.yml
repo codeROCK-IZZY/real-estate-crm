@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: "Python ${{ matrix.python }}: lint, types, tests"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Lint and format
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Type-check (strict)
+        run: mypy
+      - name: Tests (Claude's inquiry reading runs through the real SDK against canned API responses)
+        run: pytest
+
+  evaluation:
+    name: Call-queue policies on held-out and shifted brokerages (gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: recrm evaluate --gate --out "$RUNNER_TEMP/eval"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evaluation-report
+          path: ${{ runner.temp }}/eval
+
+  container:
+    name: Container serves the CRM console
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t recrm .
+      - name: Health check, the call queue, deadlines through the API and the console page
+        run: |
+          docker run -d --name recrm -p 8000:8000 recrm
+          for _ in $(seq 1 60); do curl -fs http://127.0.0.1:8000/healthz && break; sleep 2; done
+          curl -fs "http://127.0.0.1:8000/api/queue?limit=3" | grep -q priority
+          curl -fs -X POST -H "Content-Type: application/json" -d '{"contract":"2026-11-20","closing":"2026-12-28"}' http://127.0.0.1:8000/api/transactions | grep -q "Earnest money"
+          curl -fs http://127.0.0.1:8000/ | grep -q "Call next"
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest git /repo --no-banner

@@ -1,7 +1,7 @@
 """Which leads buy: logistic regression on what the brokerage can see, trained on past leads.
 
-Training data is the brokerage's own history: every lead that was reached on the first or second day, labelled by
-whether they booked a viewing. Leads reached late are left out, because by then whether they answered says more about
+Training data is the brokerage's own history (a past period worked newest-first, the usual habit): every lead that
+was reached on the first or second day, labelled by whether they booked a viewing. Leads reached late are left out, because by then whether they answered says more about
 timing than about the lead. Fitted with numpy (L2-regularised gradient descent), no other dependencies.
 """
 
@@ -46,7 +46,7 @@ def fit(x: np.ndarray, y: np.ndarray, l2: float = 1.0, steps: int = 2000, lr: fl
 
 
 def history(brokers: list[Brokerage], seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
-    """Past leads worked oldest-first, kept when reached within two days of arriving."""
+    """Past leads worked newest-first, kept when reached within two days of arriving."""
     from .queue import simulate_history
 
     xs: list[np.ndarray] = []
